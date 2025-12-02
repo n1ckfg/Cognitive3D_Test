@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
 using UnityEngine;
 using System.Collections;
 //using UnityEngine.Networking;
@@ -244,3 +247,88 @@ public class BasicController : MonoBehaviour
     }
 
 }
+
+#if UNITY_EDITOR
+public class InputManagerModifier {
+
+    [MenuItem("Tools/Input/Setup Custom Axes")]
+    public static void SetupInputAxes() {
+        SerializedObject serialObj = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/InputManager.asset")[0]);
+        SerializedProperty axesProperty = serialObj.FindProperty("m_Axes");
+
+        AddAxis(axesProperty, new InputAxis {
+            name = "Vertical2",
+            positiveButton = "e",
+            negativeButton = "q",
+            altPositiveButton = "",
+            altNegativeButton = "",
+            gravity = 3,
+            dead = 0.001f,
+            sensitivity = 3,
+            type = AxisType.KeyOrMouseButton,
+            axis = 0
+        });
+
+        serialObj.ApplyModifiedProperties();
+        
+        Debug.Log("Input Manager updated successfully!");
+    }
+
+    private static void AddAxis(SerializedProperty axesProperty, InputAxis axisData) {
+        SerializedProperty existingAxis = null;
+        
+        for (int i = 0; i < axesProperty.arraySize; i++) {
+            SerializedProperty axis = axesProperty.GetArrayElementAtIndex(i);
+            if (axis.FindPropertyRelative("m_Name").stringValue == axisData.name) {
+                existingAxis = axis;
+                break;
+            }
+        }
+
+        if (existingAxis == null) {
+            axesProperty.arraySize++;
+            existingAxis = axesProperty.GetArrayElementAtIndex(axesProperty.arraySize - 1);
+        }
+
+        existingAxis.FindPropertyRelative("m_Name").stringValue = axisData.name;
+        existingAxis.FindPropertyRelative("descriptiveName").stringValue = axisData.descriptiveName;
+        existingAxis.FindPropertyRelative("descriptiveNegativeName").stringValue = axisData.descriptiveNegativeName;
+        existingAxis.FindPropertyRelative("negativeButton").stringValue = axisData.negativeButton;
+        existingAxis.FindPropertyRelative("positiveButton").stringValue = axisData.positiveButton;
+        existingAxis.FindPropertyRelative("altNegativeButton").stringValue = axisData.altNegativeButton;
+        existingAxis.FindPropertyRelative("altPositiveButton").stringValue = axisData.altPositiveButton;
+        existingAxis.FindPropertyRelative("gravity").floatValue = axisData.gravity;
+        existingAxis.FindPropertyRelative("dead").floatValue = axisData.dead;
+        existingAxis.FindPropertyRelative("sensitivity").floatValue = axisData.sensitivity;
+        existingAxis.FindPropertyRelative("snap").boolValue = axisData.snap;
+        existingAxis.FindPropertyRelative("invert").boolValue = axisData.invert;
+        existingAxis.FindPropertyRelative("type").intValue = (int)axisData.type;
+        existingAxis.FindPropertyRelative("axis").intValue = axisData.axis - 1;
+        existingAxis.FindPropertyRelative("joyNum").intValue = axisData.joyNum;
+    }
+
+    public enum AxisType {
+        KeyOrMouseButton = 0,
+        MouseMovement = 1,
+        JoystickAxis = 2
+    }
+
+    public class InputAxis {
+        public string name = "";
+        public string descriptiveName = "";
+        public string descriptiveNegativeName = "";
+        public string negativeButton = "";
+        public string positiveButton = "";
+        public string altNegativeButton = "";
+        public string altPositiveButton = "";
+        public float gravity = 0;
+        public float dead = 0;
+        public float sensitivity = 0;
+        public bool snap = false;
+        public bool invert = false;
+        public AxisType type = AxisType.KeyOrMouseButton;
+        public int axis = 0; // 0 = X, 1 = Y, etc.
+        public int joyNum = 0; // all Joysticks
+    }
+}
+#endif
